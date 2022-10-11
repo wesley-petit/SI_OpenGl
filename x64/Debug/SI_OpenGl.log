@@ -1,0 +1,7 @@
+﻿  SI_OpenGl.cpp
+C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\SI_OpenGl.cpp(115,47): warning C4267: 'argument' : conversion de 'size_t' en 'GLsizei', perte possible de données
+  shader.cpp
+  stl.cpp
+  Génération de code en cours...
+  glad.c
+  SI_OpenGl.vcxproj -> C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\x64\Debug\SI_OpenGl.exe
