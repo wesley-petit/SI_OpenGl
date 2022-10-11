@@ -40,11 +40,11 @@
     <None Include="resources\models\logo.stl">
       <Filter>Fichiers de ressources</Filter>
     </None>
-    <None Include="resources\shaders\shader.vert">
-      <Filter>Fichiers de ressources</Filter>
-    </None>
     <None Include="resources\shaders\shader.frag">
-      <Filter>Fichiers de ressources</Filter>
+      <Filter>Fichiers sources</Filter>
+    </None>
+    <None Include="resources\shaders\shader.vert">
+      <Filter>Fichiers sources</Filter>
     </None>
   </ItemGroup>
 </Project>

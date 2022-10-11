@@ -1,1 +1,14 @@
-﻿  SI_OpenGl.vcxproj -> C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\x64\Release\SI_OpenGl.exe
+﻿  SI_OpenGl.cpp
+C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\SI_OpenGl.cpp(146,81): warning C4244: 'argument' : conversion de 'double' en 'GLfloat', perte possible de données
+C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\SI_OpenGl.cpp(146,61): warning C4244: 'argument' : conversion de 'double' en 'GLfloat', perte possible de données
+C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\SI_OpenGl.cpp(146,36): warning C4244: 'argument' : conversion de 'double' en 'GLfloat', perte possible de données
+C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\SI_OpenGl.cpp(147,47): warning C4267: 'argument' : conversion de 'size_t' en 'GLsizei', perte possible de données
+LINK : warning LNK4098: conflit entre la bibliothèque par défaut 'MSVCRTD' et les autres bibliothèques ; utilisez /NODEFAULTLIB:library
+  Génération de code en cours
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 381 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Fin de la génération du code
+glad.obj : warning LNK4204: 'C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\x64\Release\vc143.pdb' n'a pas d'informations de débogage pour référencer le module ; édition de liens des objets comme s'il n'y avait aucune information de débogage
+shader.obj : warning LNK4204: 'C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\x64\Release\vc143.pdb' n'a pas d'informations de débogage pour référencer le module ; édition de liens des objets comme s'il n'y avait aucune information de débogage
+stl.obj : warning LNK4204: 'C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\x64\Release\vc143.pdb' n'a pas d'informations de débogage pour référencer le module ; édition de liens des objets comme s'il n'y avait aucune information de débogage
+  SI_OpenGl.vcxproj -> C:\Users\wpetit\Documents\M2\Synthese_Image\SI_OpenGl\x64\Release\SI_OpenGl.exe

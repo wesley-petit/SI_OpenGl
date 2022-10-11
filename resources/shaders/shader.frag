@@ -1,8 +1,9 @@
 #version 450
 
 out vec4 color;
+uniform vec4 customColor;
 
 void main()
 {
-    color = vec4(vec3(1, 1, 1), 1.0);
+    color = customColor;
 }
