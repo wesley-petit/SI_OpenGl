@@ -15,7 +15,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "source/shader.h"
-
+public struct Light
+{
+	glm::vec3 position;
+	glm::vec3 le;
+};
 static void error_callback(int /*error*/, const char* description)
 {
 	std::cerr << "Error: " << description << std::endl;
@@ -110,6 +114,9 @@ int main(void)
 	const auto locTranslate = glGetUniformLocation(program, "translate");
 	assert(0 <= locTranslate);
 
+	const auto locScale = glGetUniformLocation(program, "scale");
+	assert(0 <= locScale);
+
 	const auto locRotate = glGetUniformLocation(program, "rotate");
 	assert(0 <= locRotate);
 
@@ -121,14 +128,14 @@ int main(void)
 	glEnable(GL_DEPTH_TEST);
 
 	float x = 0.2f;
-	float z = -0.4f;
-	const glm::vec3 SPEED(0.01f, 0.0f,  0.04f);
-	const glm::vec3 LIMIT (0.8f, 0.0f, 0.75f);
+	float y = -0.4f;
+	const glm::vec2 SPEED(0.01f, 0.02f);
+	const glm::vec2 LIMIT (1.7f, 1.7f);
 
-	glm::vec3 direction(1, 1, 1);
+	glm::vec2 direction(1, 1);
 
 	glm::mat4 rotation(1.0f);
-	rotation = glm::rotate(rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	rotation = glm::rotate(rotation, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 	// Boucle de rendu
 	while (!glfwWindowShouldClose(window))
@@ -140,7 +147,8 @@ int main(void)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glUniform3f(locTranslate, x, 0.0f, z);
+		glUniform3f(locTranslate, x, y, 0.0f);
+		glUniform1f(locScale, 0.01f);
 		glUniformMatrix4fv(locRotate, 1, GL_FALSE, glm::value_ptr(rotation));
 
 		glUniform4f(locCustomColor, 1.0f + cos(glfwGetTime()), sin(glfwGetTime()), cos(glfwGetTime()), 1.0f);
@@ -157,11 +165,11 @@ int main(void)
 			direction.x *= -1;
 		}
 
-		z += (float)direction.z * SPEED.x;
+		y += (float)direction.y * SPEED.y;
 
-		if (z < -LIMIT.z || LIMIT.z < z)
+		if (y < -LIMIT.y || LIMIT.y < y)
 		{
-			direction.z *= -1;
+			direction.y *= -1;
 		}
 
 
