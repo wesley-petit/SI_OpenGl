@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+ï»¿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/vec3.hpp>
 
@@ -15,11 +15,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "source/shader.h"
-public struct Light
-{
-	glm::vec3 position;
-	glm::vec3 le;
-};
+#include "source/LightSource.h"
+#include "source/Material.h"
+#include "source/Triangle.h"
+
 static void error_callback(int /*error*/, const char* description)
 {
 	std::cerr << "Error: " << description << std::endl;
@@ -40,6 +39,34 @@ void APIENTRY opengl_error_callback(GLenum source,
 	const void* userParam)
 {
 	std::cout << message << std::endl;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::vec3& v)
+{
+	os << '(' << v.x << ", " << v.y << ", " << v.z << ')' << '\n';
+	return os;
+}
+
+void CreateTriangleWithNormals(const std::vector<Triangle>& triangles, std::vector<TriangleWithNormal>& outTrianglesWithNormals)
+{
+	outTrianglesWithNormals.reserve(triangles.size());
+
+	for (size_t i = 0; i < triangles.size(); i++)
+	{
+		auto& t = triangles[i];
+
+		glm::vec3 a = t.p0 - t.p1;
+		glm::vec3 b = t.p0 - t.p2;
+		glm::vec3 n = glm::normalize(glm::cross(a, b));
+
+		//std::cout << "A" << a;
+		//std::cout << "B" << b;
+		//std::cout << "N" << n;
+		//std::cout << std::endl;
+
+		TriangleWithNormal trisWithNormal({ t.p0, n, t.p1, n, t.p2, n });
+		outTrianglesWithNormals.push_back(trisWithNormal);
+	}
 }
 
 int main(void)
@@ -68,7 +95,7 @@ int main(void)
 	glfwSwapInterval(1);
 #pragma endregion
 
-	// Récupère les fonctions pointeurs d'OpenGL du driver
+	// Rï¿½cupï¿½re les fonctions pointeurs d'OpenGL du driver
 	if (!gladLoadGL()) {
 		std::cerr << "Something went wrong!" << std::endl;
 		exit(-1);
@@ -88,40 +115,55 @@ int main(void)
 	glUseProgram(program);
 
 
-	// Définie les matrices de données stockants les vertices du modèles
+	// Dï¿½finie les matrices de donnï¿½es stockants les vertices du modï¿½les
 	// Buffers
 	GLuint vbo, vao;
 	glGenBuffers(1, &vbo);
 	glGenVertexArrays(1, &vao);
 
-	const auto tris = ReadStl("./resources/models/baby_yoda.stl");
-	std::cout << tris.size() << std::endl;
+	const auto trisWithoutNormals = ReadStl("resources/models/baby_yoda.stl");
+	std::cout << trisWithoutNormals.size() << std::endl;
+
+	std::vector<TriangleWithNormal> tris;
+	CreateTriangleWithNormals(trisWithoutNormals, tris);
 	const auto nTriangles = tris.size();
 
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, nTriangles * sizeof(Triangle), tris.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, nTriangles * sizeof(TriangleWithNormal), tris.data(), GL_STATIC_DRAW);
 
 
-	// Définie une position au vertex shader
+#pragma region Vertex Shader Loc
+	// Dï¿½finie une position au vertex shader
 	// Bindings
-	const auto index = glGetAttribLocation(program, "position");
+	const auto locPosition = glGetAttribLocation(program, "position");
 
-	glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, sizeof(Triangle) / 3, nullptr);
-	glEnableVertexAttribArray(index);
+	glVertexAttribPointer(locPosition, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), nullptr);
+	glEnableVertexAttribArray(locPosition);
+	assert(locPosition != -1);
+
+	const auto locNormal = glGetAttribLocation(program, "normal");
+	glVertexAttribPointer(locNormal, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), (const void*) sizeof(glm::vec3));
+	glEnableVertexAttribArray(locNormal);
+	assert(locNormal != -1);
 
 	const auto locTranslate = glGetUniformLocation(program, "translate");
-	assert(0 <= locTranslate);
+	assert(locTranslate != -1);
 
 	const auto locScale = glGetUniformLocation(program, "scale");
-	assert(0 <= locScale);
+	assert(locScale != -1);
 
 	const auto locRotate = glGetUniformLocation(program, "rotate");
-	assert(0 <= locRotate);
+	assert(locRotate != -1);
+#pragma endregion
 
-	const auto locCustomColor = glGetUniformLocation(program, "customColor");
-	assert(0 <= locCustomColor);
+
+#pragma region Fragment Shader Loc
+	//const auto locCustomColor = glGetUniformLocation(program, "customColor");
+	//assert(locCustomColor != -1);
+#pragma endregion
+
 
 	// glPointSize(20.f);
 	//
@@ -130,12 +172,13 @@ int main(void)
 	float x = 0.2f;
 	float y = -0.4f;
 	const glm::vec2 SPEED(0.01f, 0.02f);
-	const glm::vec2 LIMIT (1.7f, 1.7f);
+	const glm::vec2 LIMIT(1.7f, 1.7f);
 
 	glm::vec2 direction(1, 1);
 
 	glm::mat4 rotation(1.0f);
-	rotation = glm::rotate(rotation, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	rotation = glm::rotate(rotation, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	rotation = rotation + glm::rotate(rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
 	// Boucle de rendu
 	while (!glfwWindowShouldClose(window))
@@ -147,20 +190,18 @@ int main(void)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// Vertex Shader
 		glUniform3f(locTranslate, x, y, 0.0f);
 		glUniform1f(locScale, 0.01f);
 		glUniformMatrix4fv(locRotate, 1, GL_FALSE, glm::value_ptr(rotation));
 
-		glUniform4f(locCustomColor, 1.0f + cos(glfwGetTime()), sin(glfwGetTime()), cos(glfwGetTime()), 1.0f);
+		// Fragment Shader
+		//glUniform4f(locCustomColor, 1.0f + cos(glfwGetTime()), sin(glfwGetTime()), cos(glfwGetTime()), 1.0f);
 		glDrawArrays(GL_TRIANGLES, 0, nTriangles * 3);
 
-		//glUniform3f(locTranslate, -0.5f, -0.5f, 0.0f);
-		//glUniform4f(locCustomColor, 0.0f, 0.0f, 1.0f, 1.0f);
-		//glDrawArrays(GL_TRIANGLES, 0, nTriangles * 3);
-
+		// DÃ©placement du modÃ¨le
 		x += (float)direction.x * SPEED.x;
-
-		if (x < -LIMIT.x || LIMIT.x  < x)
+		if (x < -LIMIT.x || LIMIT.x < x)
 		{
 			direction.x *= -1;
 		}
