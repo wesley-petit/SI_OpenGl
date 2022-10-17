@@ -59,11 +59,6 @@ void CreateTriangleWithNormals(const std::vector<Triangle>& triangles, std::vect
 		glm::vec3 b = t.p0 - t.p2;
 		glm::vec3 n = glm::normalize(glm::cross(a, b));
 
-		//std::cout << "A" << a;
-		//std::cout << "B" << b;
-		//std::cout << "N" << n;
-		//std::cout << std::endl;
-
 		TriangleWithNormal trisWithNormal({ t.p0, n, t.p1, n, t.p2, n });
 		outTrianglesWithNormals.push_back(trisWithNormal);
 	}
@@ -121,6 +116,7 @@ int main(void)
 	glGenBuffers(1, &vbo);
 	glGenVertexArrays(1, &vao);
 
+	// Modèle brute
 	const auto trisWithoutNormals = ReadStl("resources/models/baby_yoda.stl");
 	std::cout << trisWithoutNormals.size() << std::endl;
 
@@ -158,27 +154,36 @@ int main(void)
 	assert(locRotate != -1);
 #pragma endregion
 
-
 #pragma region Fragment Shader Loc
-	//const auto locCustomColor = glGetUniformLocation(program, "customColor");
-	//assert(locCustomColor != -1);
-#pragma endregion
+	const auto locLightPosition = glGetUniformLocation(program, "lightPosition");
+	assert(locLightPosition != -1);
 
+	const auto locLightEmitted = glGetUniformLocation(program, "lightEmitted");
+	assert(locLightEmitted != -1);
+
+	const auto locAlbedo = glGetUniformLocation(program, "albedo");
+	assert(locAlbedo != -1);
+#pragma endregion
 
 	// glPointSize(20.f);
 	//
 	glEnable(GL_DEPTH_TEST);
 
-	float x = 0.2f;
-	float y = -0.4f;
 	const glm::vec2 SPEED(0.01f, 0.02f);
 	const glm::vec2 LIMIT(1.7f, 1.7f);
+	
+	float x = 0.2f;
+	float y = -0.4f;
 
 	glm::vec2 direction(1, 1);
 
-	glm::mat4 rotation(1.0f);
-	rotation = glm::rotate(rotation, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 rotation(glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
 	rotation = rotation + glm::rotate(rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+	// Intialisation des composantes de la scene (lumière, matériaux...)
+	const LightSource lightSource{ glm::vec3(-50, -50, 50), glm::vec3(10000, 10000, 10000) };
+	const Material material{ glm::vec3(0.75, 0.25, 0.45) };
+
 
 	// Boucle de rendu
 	while (!glfwWindowShouldClose(window))
@@ -196,7 +201,9 @@ int main(void)
 		glUniformMatrix4fv(locRotate, 1, GL_FALSE, glm::value_ptr(rotation));
 
 		// Fragment Shader
-		//glUniform4f(locCustomColor, 1.0f + cos(glfwGetTime()), sin(glfwGetTime()), cos(glfwGetTime()), 1.0f);
+		glUniform3fv(locLightPosition, 1, glm::value_ptr(lightSource.position));
+		glUniform3fv(locLightEmitted, 1, glm::value_ptr(lightSource.radianceEmitted));
+		glUniform3fv(locAlbedo, 1, glm::value_ptr(material.albedo));
 		glDrawArrays(GL_TRIANGLES, 0, nTriangles * 3);
 
 		// Déplacement du modèle

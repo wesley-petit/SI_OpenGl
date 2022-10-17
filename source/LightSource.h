@@ -3,6 +3,5 @@
 
 struct LightSource
 {
-    glm::vec3 position;
-    glm::vec3 radianceEmitted;
+    glm::vec3 position, radianceEmitted;
 };
