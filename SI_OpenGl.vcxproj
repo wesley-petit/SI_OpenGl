@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClInclude Include="source\LightSource.h" />
     <ClInclude Include="source\Material.h" />
+    <ClInclude Include="source\MeshModifier.h" />
     <ClInclude Include="source\shader.h" />
     <ClInclude Include="source\stl.h" />
     <ClInclude Include="source\Triangle.h" />
@@ -147,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\models\baby_yoda.stl" />
+    <None Include="resources\models\djinn_mars.stl" />
     <None Include="resources\models\logo.stl" />
     <None Include="resources\shaders\shader.frag" />
     <None Include="resources\shaders\shader.vert" />

@@ -18,6 +18,7 @@
 #include "source/LightSource.h"
 #include "source/Material.h"
 #include "source/Triangle.h"
+#include "source/MeshModifier.h"
 
 static void error_callback(int /*error*/, const char* description)
 {
@@ -47,23 +48,6 @@ std::ostream& operator<<(std::ostream& os, const glm::vec3& v)
 	return os;
 }
 
-void CreateTriangleWithNormals(const std::vector<Triangle>& triangles, std::vector<TriangleWithNormal>& outTrianglesWithNormals)
-{
-	outTrianglesWithNormals.reserve(triangles.size());
-
-	for (size_t i = 0; i < triangles.size(); i++)
-	{
-		auto& t = triangles[i];
-
-		glm::vec3 a = t.p0 - t.p1;
-		glm::vec3 b = t.p0 - t.p2;
-		glm::vec3 n = glm::normalize(glm::cross(a, b));
-
-		TriangleWithNormal trisWithNormal({ t.p0, n, t.p1, n, t.p2, n });
-		outTrianglesWithNormals.push_back(trisWithNormal);
-	}
-}
-
 int main(void)
 {
 #pragma region Create and open a window
@@ -90,6 +74,7 @@ int main(void)
 	glfwSwapInterval(1);
 #pragma endregion
 
+#pragma region Read and bind shader program
 	// R�cup�re les fonctions pointeurs d'OpenGL du driver
 	if (!gladLoadGL()) {
 		std::cerr << "Something went wrong!" << std::endl;
@@ -108,8 +93,9 @@ int main(void)
 	const auto program = AttachAndLink({ vertex, fragment });
 
 	glUseProgram(program);
+#pragma endregion
 
-
+#pragma region Setup vertex buffers
 	// D�finie les matrices de donn�es stockants les vertices du mod�les
 	// Buffers
 	GLuint vbo, vao;
@@ -117,18 +103,32 @@ int main(void)
 	glGenVertexArrays(1, &vao);
 
 	// Modèle brute
-	const auto trisWithoutNormals = ReadStl("resources/models/baby_yoda.stl");
-	std::cout << trisWithoutNormals.size() << std::endl;
+	auto babyYodaRaw = ReadStl("resources/models/baby_yoda.stl");
+	std::cout << babyYodaRaw.size() << std::endl;
+	const auto nTrianglesYoda = babyYodaRaw.size();
 
+	auto djinnMarsRaw = ReadStl("resources/models/djinn_mars.stl");
+	std::cout << djinnMarsRaw.size() << std::endl;
+	const auto nTrianglesDjinn = djinnMarsRaw.size();
+
+	// Fusionne les modèles en un buffer
 	std::vector<TriangleWithNormal> tris;
-	CreateTriangleWithNormals(trisWithoutNormals, tris);
+	tris.reserve(nTrianglesYoda + nTrianglesDjinn);
+	CenterAllVertex(babyYodaRaw);
+	CreateTriangleWithNormals(babyYodaRaw, tris);
+	CenterAllVertex(djinnMarsRaw);
+	CreateTriangleWithNormals(djinnMarsRaw, tris);
+
 	const auto nTriangles = tris.size();
 
+	std::cout << "Yoda Size : " << nTrianglesYoda << std::endl;
+	std::cout << "Djinn Size : " << nTrianglesDjinn << std::endl;
+	std::cout << "Total Size : " << nTriangles * sizeof(TriangleWithNormal) << std::endl;
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, nTriangles * sizeof(TriangleWithNormal), tris.data(), GL_STATIC_DRAW);
-
+#pragma endregion
 
 #pragma region Vertex Shader Loc
 	// D�finie une position au vertex shader
@@ -147,11 +147,8 @@ int main(void)
 	const auto locTranslate = glGetUniformLocation(program, "translate");
 	assert(locTranslate != -1);
 
-	const auto locScale = glGetUniformLocation(program, "scale");
-	assert(locScale != -1);
-
-	const auto locRotate = glGetUniformLocation(program, "rotate");
-	assert(locRotate != -1);
+	const auto locTransform = glGetUniformLocation(program, "transform");
+	assert(locTransform != -1);
 #pragma endregion
 
 #pragma region Fragment Shader Loc
@@ -177,34 +174,57 @@ int main(void)
 
 	glm::vec2 direction(1, 1);
 
-	glm::mat4 rotation(glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-	rotation = rotation + glm::rotate(rotation, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+#pragma region Uniform variables
+	// Intialisation des composantes de la scene (lumière...)
+	//const LightSource lightSource{ glm::vec3(0, 0, 150), glm::vec3(70000, 70000, 70000) };
+	LightSource lightSource{ glm::vec3(0, -150, 50), glm::vec3(40000, 40000, 40000) };
 
-	// Intialisation des composantes de la scene (lumière, matériaux...)
-	const LightSource lightSource{ glm::vec3(-50, -50, 50), glm::vec3(10000, 10000, 10000) };
-	const Material material{ glm::vec3(0.75, 0.25, 0.45) };
+	// Variables pour chaque buffer
+	glm::mat4 yodaTransform(glm::mat4(1.0f));
+	yodaTransform = glm::rotate(yodaTransform, glm::radians(180.0f), glm::vec3(0, 1, 0));
+	yodaTransform = glm::rotate(yodaTransform, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	yodaTransform = glm::scale(yodaTransform, glm::vec3(0.01f, 0.01f, 0.01f));
+	
+	const Material yodaMaterial{ glm::vec3(0.1f, 0.8f, 0.15f) };
 
+	glm::mat4 djinnTransform(glm::mat4(1.0f));
+	djinnTransform = glm::rotate(djinnTransform, glm::radians(90.0f), glm::vec3(1, 0, 0));
+	djinnTransform = glm::rotate(djinnTransform, glm::radians(-135.0f), glm::vec3(0, 1, 0));
+	djinnTransform = glm::scale(djinnTransform, glm::vec3(0.01f, 0.01f, 0.01f));
+	const Material djinnMaterial{ glm::vec3(0.75f, 0.2f, 0.1f) };
+#pragma endregion
 
 	// Boucle de rendu
 	while (!glfwWindowShouldClose(window))
 	{
-
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 		glViewport(0, 0, width, height);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Vertex Shader
-		glUniform3f(locTranslate, x, y, 0.0f);
-		glUniform1f(locScale, 0.01f);
-		glUniformMatrix4fv(locRotate, 1, GL_FALSE, glm::value_ptr(rotation));
-
-		// Fragment Shader
+		// Lumière 
 		glUniform3fv(locLightPosition, 1, glm::value_ptr(lightSource.position));
 		glUniform3fv(locLightEmitted, 1, glm::value_ptr(lightSource.radianceEmitted));
-		glUniform3fv(locAlbedo, 1, glm::value_ptr(material.albedo));
-		glDrawArrays(GL_TRIANGLES, 0, nTriangles * 3);
+
+		/* ------------------------------------ Yoda ------------------------------------ */ 
+		// Vertex Shader
+		glUniform3f(locTranslate, x, y, 0.0f);
+		glUniformMatrix4fv(locTransform, 1, GL_FALSE, glm::value_ptr(yodaTransform));
+
+		// Fragment Shader
+		glUniform3fv(locAlbedo, 1, glm::value_ptr(yodaMaterial.albedo));
+		glDrawArrays(GL_TRIANGLES, 0, nTrianglesYoda * 3);
+
+
+		/* ------------------------------------ Djinn ------------------------------------ */
+		// Vertex Shader
+		glUniform3f(locTranslate, 0, 0, 0);
+		glUniformMatrix4fv(locTransform, 1, GL_FALSE, glm::value_ptr(djinnTransform));
+
+		// Fragment Shader
+		glUniform3fv(locAlbedo, 1, glm::value_ptr(djinnMaterial.albedo));
+		glDrawArrays(GL_TRIANGLES, nTrianglesYoda * 3, nTrianglesDjinn * 3);
 
 		// Déplacement du modèle
 		x += (float)direction.x * SPEED.x;

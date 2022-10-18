@@ -36,6 +36,9 @@
     <ClInclude Include="source\Triangle.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="source\MeshModifier.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\shader.cpp">
@@ -63,6 +66,9 @@
     </None>
     <None Include="resources\shaders\shader.vert">
       <Filter>Fichiers de ressources\shaders</Filter>
+    </None>
+    <None Include="resources\models\djinn_mars.stl">
+      <Filter>Fichiers de ressources\models</Filter>
     </None>
   </ItemGroup>
 </Project>
