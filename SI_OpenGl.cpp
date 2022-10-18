@@ -1,6 +1,5 @@
 ﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/vec3.hpp>
 
 #include <vector>
 #include <iostream>
@@ -8,12 +7,15 @@
 #include <sstream>
 #include <fstream>
 #include <string>
-#include "source/stl.h"
 
+#include <glm/vec3.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <SOIL/SOIL.h>
+
+#include "source/stl.h"
 #include "source/shader.h"
 #include "source/LightSource.h"
 #include "source/Material.h"
@@ -130,36 +132,59 @@ int main(void)
 	glBufferData(GL_ARRAY_BUFFER, nTriangles * sizeof(TriangleWithNormal), tris.data(), GL_STATIC_DRAW);
 #pragma endregion
 
+#pragma region Setup Textures
+	int width(1280);
+	int height(720);
+	auto texture = SOIL_load_image("resources/textures/david_goodenough.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+
+	// Create an OpenGL texture
+	GLuint texC;
+	glCreateTextures(GL_TEXTURE_2D, 1, &texC);
+	glTextureStorage2D(texC, 5, GL_RGB8, width, height);
+
+	// Send the data
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTextureSubImage2D(texC, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, texture);
+	glGenerateTextureMipmap(texC);
+#pragma endregion
+
 #pragma region Vertex Shader Loc
 	// D�finie une position au vertex shader
 	// Bindings
-	const auto locPosition = glGetAttribLocation(program, "position");
+	const auto locPosition(glGetAttribLocation(program, "position"));
+	assert(locPosition != -1);
 
 	glVertexAttribPointer(locPosition, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), nullptr);
 	glEnableVertexAttribArray(locPosition);
-	assert(locPosition != -1);
 
-	const auto locNormal = glGetAttribLocation(program, "normal");
+
+	const auto locNormal(glGetAttribLocation(program, "normal"));
+	assert(locNormal != -1);
+	
 	glVertexAttribPointer(locNormal, 3, GL_FLOAT, GL_FALSE, 2 * sizeof(glm::vec3), (const void*) sizeof(glm::vec3));
 	glEnableVertexAttribArray(locNormal);
-	assert(locNormal != -1);
 
-	const auto locTranslate = glGetUniformLocation(program, "translate");
+
+	const auto locTranslate(glGetUniformLocation(program, "translate"));
 	assert(locTranslate != -1);
 
-	const auto locTransform = glGetUniformLocation(program, "transform");
+	const auto locTransform(glGetUniformLocation(program, "transform"));
 	assert(locTransform != -1);
 #pragma endregion
 
 #pragma region Fragment Shader Loc
-	const auto locLightPosition = glGetUniformLocation(program, "lightPosition");
+	const auto locLightPosition(glGetUniformLocation(program, "lightPosition"));
 	assert(locLightPosition != -1);
 
-	const auto locLightEmitted = glGetUniformLocation(program, "lightEmitted");
+	const auto locLightEmitted(glGetUniformLocation(program, "lightEmitted"));
 	assert(locLightEmitted != -1);
 
-	const auto locAlbedo = glGetUniformLocation(program, "albedo");
+	const auto locAlbedo(glGetUniformLocation(program, "albedo"));
 	assert(locAlbedo != -1);
+
+	const auto locTexture(glGetUniformLocation(program, "tex"));
+	assert(locTexture != -1);
 #pragma endregion
 
 	// glPointSize(20.f);
@@ -175,10 +200,13 @@ int main(void)
 	glm::vec2 direction(1, 1);
 
 #pragma region Uniform variables
-	// Intialisation des composantes de la scene (lumière...)
-	//const LightSource lightSource{ glm::vec3(0, 0, 150), glm::vec3(70000, 70000, 70000) };
-	LightSource lightSource{ glm::vec3(0, -150, 50), glm::vec3(40000, 40000, 40000) };
+	LightSource lightSource{ glm::vec3(50 * cos(glfwGetTime()), -150, 50), glm::vec3(40000, 40000, 40000) };
 
+	// Texture du modèle
+	glBindTextureUnit(0, texC);
+	glUniform1i(locTexture, 0);
+
+	// Intialisation des composantes de la scene (lumière...)
 	// Variables pour chaque buffer
 	glm::mat4 yodaTransform(glm::mat4(1.0f));
 	yodaTransform = glm::rotate(yodaTransform, glm::radians(180.0f), glm::vec3(0, 1, 0));
@@ -187,10 +215,12 @@ int main(void)
 	
 	const Material yodaMaterial{ glm::vec3(0.1f, 0.8f, 0.15f) };
 
+
 	glm::mat4 djinnTransform(glm::mat4(1.0f));
 	djinnTransform = glm::rotate(djinnTransform, glm::radians(90.0f), glm::vec3(1, 0, 0));
 	djinnTransform = glm::rotate(djinnTransform, glm::radians(-135.0f), glm::vec3(0, 1, 0));
 	djinnTransform = glm::scale(djinnTransform, glm::vec3(0.01f, 0.01f, 0.01f));
+
 	const Material djinnMaterial{ glm::vec3(0.75f, 0.2f, 0.1f) };
 #pragma endregion
 
@@ -203,7 +233,8 @@ int main(void)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Lumière 
+		// Lumière
+		lightSource.position = glm::vec3(100 * sin(glfwGetTime()), 150 * cos(glfwGetTime()), 50);
 		glUniform3fv(locLightPosition, 1, glm::value_ptr(lightSource.position));
 		glUniform3fv(locLightEmitted, 1, glm::value_ptr(lightSource.radianceEmitted));
 
@@ -219,7 +250,7 @@ int main(void)
 
 		/* ------------------------------------ Djinn ------------------------------------ */
 		// Vertex Shader
-		glUniform3f(locTranslate, 0, 0, 0);
+		glUniform3f(locTranslate, -0.5, 0, 0);
 		glUniformMatrix4fv(locTransform, 1, GL_FALSE, glm::value_ptr(djinnTransform));
 
 		// Fragment Shader
@@ -234,12 +265,10 @@ int main(void)
 		}
 
 		y += (float)direction.y * SPEED.y;
-
 		if (y < -LIMIT.y || LIMIT.y < y)
 		{
 			direction.y *= -1;
 		}
-
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

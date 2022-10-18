@@ -104,13 +104,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>%OPENGL%\glad\include;%OPENGL%\glm;%OPENGL%\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%OPENGL%\soil\inc;%OPENGL%\glad\include;%OPENGL%\glm;%OPENGL%\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>%OPENGL%\glfw\lib;C:\Windows\System32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%OPENGL%\soil\build\Debug;%OPENGL%\glfw\lib;C:\Windows\System32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>soil.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -121,15 +121,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>%OPENGL%\glfw\include;%OPENGL%\glm;%OPENGL%\glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%OPENGL%\soil\inc;%OPENGL%\glfw\include;%OPENGL%\glm;%OPENGL%\glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>%OPENGL%\glfw\lib;C:\Windows\System32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%OPENGL%\soil\build\Release;%OPENGL%\glfw\lib;C:\Windows\System32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>soil.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -141,8 +141,8 @@
     <ClInclude Include="source\Triangle.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="includes\glad.c" />
     <ClCompile Include="SI_OpenGl.cpp" />
-    <ClCompile Include="source\glad.c" />
     <ClCompile Include="source\shader.cpp" />
     <ClCompile Include="source\stl.cpp" />
   </ItemGroup>
@@ -152,6 +152,9 @@
     <None Include="resources\models\logo.stl" />
     <None Include="resources\shaders\shader.frag" />
     <None Include="resources\shaders\shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\textures\david_goodenough.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

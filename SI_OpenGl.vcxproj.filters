@@ -19,6 +19,12 @@
     <Filter Include="Fichiers de ressources\shaders">
       <UniqueIdentifier>{a459fd32-ea3e-4d33-a255-d378af2efc01}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\externals">
+      <UniqueIdentifier>{322d1cff-7bb0-4ba9-a26c-76973207a58c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers de ressources\textures">
+      <UniqueIdentifier>{ec1b5442-eb68-4d00-9c1c-94775719843f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\LightSource.h">
@@ -50,8 +56,8 @@
     <ClCompile Include="SI_OpenGl.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="source\glad.c">
-      <Filter>Fichiers d%27en-tête</Filter>
+    <ClCompile Include="includes\glad.c">
+      <Filter>Fichiers d%27en-tête\externals</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -70,5 +76,10 @@
     <None Include="resources\models\djinn_mars.stl">
       <Filter>Fichiers de ressources\models</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\textures\david_goodenough.jpg">
+      <Filter>Fichiers de ressources\textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>
